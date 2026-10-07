@@ -45,8 +45,7 @@ subjects/groups and tissue samples/collections from the KG in one call.
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp ../.env.example ../.env   # fill in OIDC client id/secret
-uvicorn app.main:app --reload --port 4100
+DEV_MODE=true uvicorn app.main:app --reload --port 4100
 
 # frontend (separate terminal)
 cd frontend
@@ -54,12 +53,26 @@ npm install
 npm run dev   # http://localhost:5173, proxies /api and /auth to :4100
 ```
 
-## One-time setup still needed
+Open http://localhost:5173 and click **Log in**.
 
-1. **GitHub repo** — this folder is ready to push as a new repo under the
-   `mayakobchenko` account (e.g. `mayakobchenko/curation-validator`), same
-   place as `updated-metadata-wizard`. I don't have push credentials to
-   GitHub from this session, so: create the repo, then from this folder:
+`DEV_MODE=true` is what makes this work before an EBRAINS IAM OIDC client
+exists for this app: it skips the real IAM redirect and logs in a fake
+"Dev Curator" straight away, so you can click through the dashboard, the
+"start new validation" form, the checklist tabs and the export buttons.
+It's for seeing the UI only — **Pull from KG & start validation** will
+still fail (no real KG access token in dev mode), since that needs an
+actual EBRAINS login. Once Eivind sets up a real OIDC client, drop
+`DEV_MODE` and fill in `.env` (copy `.env.example`) with
+`CURATION_VALIDATOR_OIDC_CLIENT_ID`/`_SECRET` instead, and the full flow
+— including real KG pulls — will work locally too, no Kubernetes needed
+for that either.
+
+Never set `DEV_MODE=true` in a deployed environment — it bypasses login
+entirely.
+
+## One-time setup still needed (not something I can do from here)
+
+1. **GitHub repo**:
    ```bash
    git init && git add -A && git commit -m "Scaffold curation validator"
    git remote add origin https://github.com/mayakobchenko/curation-validator.git

@@ -12,12 +12,10 @@ load_dotenv()
 
 class Settings:
     # --- EBRAINS IAM / Keycloak ---
-    IAM_BASE_URL: str = os.getenv(
-        "IAM_BASE_URL", "https://iam.ebrains.eu/auth")
+    IAM_BASE_URL: str = os.getenv("IAM_BASE_URL", "https://iam.ebrains.eu/auth")
     IAM_REALM: str = os.getenv("IAM_REALM", "hbp")
     OIDC_CLIENT_ID: str = os.getenv("CURATION_VALIDATOR_OIDC_CLIENT_ID", "")
-    OIDC_CLIENT_SECRET: str = os.getenv(
-        "CURATION_VALIDATOR_OIDC_CLIENT_SECRET", "")
+    OIDC_CLIENT_SECRET: str = os.getenv("CURATION_VALIDATOR_OIDC_CLIENT_SECRET", "")
     # Where Keycloak redirects back to after login (frontend route)
     OIDC_REDIRECT_URI: str = os.getenv(
         "OIDC_REDIRECT_URI", "http://localhost:5173/auth/callback"
@@ -44,22 +42,12 @@ class Settings:
         return f"{self.iam_issuer}/protocol/openid-connect/certs"
 
     # --- EBRAINS Knowledge Graph ---
-    KG_API_BASE: str = os.getenv(
-        "KG_API_BASE", "https://core.kg.ebrains.eu/v3")
+    KG_API_BASE: str = os.getenv("KG_API_BASE", "https://core.kg.ebrains.eu/v3")
     KG_STAGE: str = os.getenv("KG_STAGE", "IN_PROGRESS")
 
     # --- Session ---
-    SESSION_SECRET: str = os.getenv(
-        "SESSION_SECRET", "dev-insecure-secret-change-me")
-    FRONTEND_ORIGIN: str = os.getenv(
-        "FRONTEND_ORIGIN", "http://localhost:5173")
-
-    # --- Local development only ---
-    # When true, /auth/login skips EBRAINS IAM entirely and logs in a fake
-    # curator, so the UI can be clicked through before an OIDC client exists.
-    # Never set this in a deployed environment — guarded again at call site.
-    DEV_MODE: bool = os.getenv(
-        "DEV_MODE", "false").lower() in ("1", "true", "yes")
+    SESSION_SECRET: str = os.getenv("SESSION_SECRET", "dev-insecure-secret-change-me")
+    FRONTEND_ORIGIN: str = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 
     # --- Storage for completed validation runs (used for the docx export +
     # a simple history list; swap for a real DB later if needed) ---

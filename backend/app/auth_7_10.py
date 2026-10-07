@@ -17,8 +17,7 @@ from .config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-_serializer = URLSafeTimedSerializer(
-    settings.SESSION_SECRET, salt="curation-validator-session")
+_serializer = URLSafeTimedSerializer(settings.SESSION_SECRET, salt="curation-validator-session")
 SESSION_COOKIE = "cv_session"
 SESSION_MAX_AGE = 60 * 60 * 8  # 8h workday
 
@@ -30,10 +29,7 @@ def _set_session(response: Response, payload: dict) -> None:
         token,
         max_age=SESSION_MAX_AGE,
         httponly=True,
-        # Browsers drop a `secure` cookie on a plain http://localhost origin,
-        # which is exactly how this app is run locally, so only require it
-        # once DEV_MODE is off (i.e. in a real, HTTPS-served deployment).
-        secure=not settings.DEV_MODE,
+        secure=True,
         samesite="lax",
     )
 
@@ -51,14 +47,7 @@ def get_current_user(request: Request) -> dict:
 
 @router.get("/login")
 async def login():
-    """Redirect the curator to EBRAINS IAM for login — unless DEV_MODE is
-    on, in which case there is no real OIDC client to redirect to yet, so
-    we log in a fake local curator instead (see /auth/dev-login)."""
-    from fastapi.responses import RedirectResponse
-
-    if settings.DEV_MODE:
-        return RedirectResponse("/auth/dev-login")
-
+    """Redirect the curator to EBRAINS IAM for login."""
     from urllib.parse import urlencode
 
     params = {
@@ -67,43 +56,15 @@ async def login():
         "response_type": "code",
         "scope": "openid profile email team roles group",
     }
-    return RedirectResponse(f"{settings.iam_auth_endpoint}?{urlencode(params)}")
-
-
-@router.get("/dev-login")
-async def dev_login():
-    """
-    LOCAL DEVELOPMENT ONLY. Logs in a fake curator with no real EBRAINS IAM
-    token, so the UI (dashboard, new-validation form, checklist, export
-    buttons) can be clicked through before an OIDC client exists for this
-    app. Anything that actually calls the KG (pulling a real dataset
-    version) will still fail without a genuine kg_access_token — that part
-    can only be tested once IAM is wired up.
-    """
     from fastapi.responses import RedirectResponse
 
-    if not settings.DEV_MODE:
-        raise HTTPException(status_code=404, detail="Not found")
-
-    response = RedirectResponse(settings.FRONTEND_ORIGIN)
-    _set_session(
-        response,
-        {
-            "sub": "dev-user",
-            "name": "Dev Curator",
-            "email": "dev-curator@example.org",
-            "kg_access_token": "dev-mode-fake-token",
-            "kg_token_expires_at": time.time() + 3600,
-        },
-    )
-    return response
+    return RedirectResponse(f"{settings.iam_auth_endpoint}?{urlencode(params)}")
 
 
 @router.get("/callback")
 async def callback(code: Optional[str] = None, error: Optional[str] = None):
     if error or not code:
-        raise HTTPException(
-            status_code=400, detail=f"IAM login failed: {error}")
+        raise HTTPException(status_code=400, detail=f"IAM login failed: {error}")
 
     async with httpx.AsyncClient() as client:
         token_resp = await client.post(
@@ -118,8 +79,7 @@ async def callback(code: Optional[str] = None, error: Optional[str] = None):
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         if token_resp.status_code != 200:
-            raise HTTPException(
-                status_code=401, detail="IAM token exchange failed")
+            raise HTTPException(status_code=401, detail="IAM token exchange failed")
         tokens = token_resp.json()
 
         userinfo_resp = await client.get(
