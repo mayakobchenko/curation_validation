@@ -1,0 +1,149 @@
+name: Build, Push and Deploy (curation-validator)
+
+on:
+  push:
+    branches:
+      - main
+      - production
+
+env:
+  SHORT_TAG: ${{ github.sha }}
+  REGISTRY: docker-registry.ebrains.eu
+  PROJECT: ebrains-data-curation
+
+jobs:
+  # ==========================
+  # DEV deployment (main)
+  # ==========================
+  build-push-deploy-dev:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    env:
+      K8S_NAMESPACE: curation-validator-dev
+      IMAGE: docker-registry.ebrains.eu/ebrains-data-curation/curation-validator-dev/image-curation-validator-dev
+      CONTAINER: container-dev-curation-validator
+      DEPLOYMENT: dev-curation-validator-deployment
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Harbor
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Build & push DEV image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.SHORT_TAG }}
+            ${{ env.IMAGE }}:latest
+
+      - name: Write kubeconfig (base64) for DEV
+        env:
+          KUBECONFIG_B64: ${{ secrets.KUBE_CONFIG_JSC }}
+        run: |
+          set -euo pipefail
+          KUBE_DIR="${{ runner.temp }}/.kube"
+          KUBE_FILE="${KUBE_DIR}/kubeconfig.yaml"
+          mkdir -p "${KUBE_DIR}"
+          echo "${KUBECONFIG_B64}" | base64 --decode > "${KUBE_FILE}"
+          if ! grep -q "apiVersion" "${KUBE_FILE}" ; then
+            echo "Decoded file does not look like a kubeconfig; aborting"
+            exit 1
+          fi
+          chmod 600 "${KUBE_FILE}"
+
+      - name: Patch DEV image
+        run: |
+          set -euo pipefail
+          KUBE_FILE="${{ runner.temp }}/.kube/kubeconfig.yaml"
+          kubectl --kubeconfig="${KUBE_FILE}" -n ${{ env.K8S_NAMESPACE }} set image \
+            deployment/${{ env.DEPLOYMENT }} \
+            ${{ env.CONTAINER }}=${{ env.IMAGE }}:${{ env.SHORT_TAG }} --record
+
+      - name: Wait for DEV rollout
+        run: |
+          set -euo pipefail
+          KUBE_FILE="${{ runner.temp }}/.kube/kubeconfig.yaml"
+          kubectl --kubeconfig="${KUBE_FILE}" -n ${{ env.K8S_NAMESPACE }} rollout status deployment/${{ env.DEPLOYMENT }} --timeout=180s
+
+      - name: Cleanup DEV kubeconfig
+        if: always()
+        run: |
+          KUBE_FILE="${{ runner.temp }}/.kube/kubeconfig.yaml"
+          shred -u "${KUBE_FILE}" || rm -f "${KUBE_FILE}"
+
+  # ==========================
+  # PROD deployment (production)
+  # ==========================
+  build-push-deploy-prod:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/production'
+    env:
+      K8S_NAMESPACE: curation-validator
+      IMAGE: docker-registry.ebrains.eu/ebrains-data-curation/curation-validator
+      CONTAINER: container-curation-validator
+      DEPLOYMENT: curation-validator-deployment
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to Harbor
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Build & push PROD image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.SHORT_TAG }}
+            ${{ env.IMAGE }}:latest
+
+      - name: Write kubeconfig (base64) for PROD
+        env:
+          KUBECONFIG_B64: ${{ secrets.KUBE_CONFIG_JSC_PROD }}
+        run: |
+          set -euo pipefail
+          KUBE_DIR="${{ runner.temp }}/.kube"
+          KUBE_FILE="${KUBE_DIR}/kubeconfig.yaml"
+          mkdir -p "${KUBE_DIR}"
+          echo "${KUBECONFIG_B64}" | base64 --decode > "${KUBE_FILE}"
+          if ! grep -q "apiVersion" "${KUBE_FILE}" ; then
+            echo "Decoded file does not look like a kubeconfig; aborting"
+            exit 1
+          fi
+          chmod 600 "${KUBE_FILE}"
+
+      - name: Patch PROD image
+        run: |
+          set -euo pipefail
+          KUBE_FILE="${{ runner.temp }}/.kube/kubeconfig.yaml"
+          kubectl --kubeconfig="${KUBE_FILE}" -n ${{ env.K8S_NAMESPACE }} set image \
+            deployment/${{ env.DEPLOYMENT }} \
+            ${{ env.CONTAINER }}=${{ env.IMAGE }}:${{ env.SHORT_TAG }} --record
+
+      - name: Wait for PROD rollout
+        run: |
+          set -euo pipefail
+          KUBE_FILE="${{ runner.temp }}/.kube/kubeconfig.yaml"
+          kubectl --kubeconfig="${KUBE_FILE}" -n ${{ env.K8S_NAMESPACE }} rollout status deployment/${{ env.DEPLOYMENT }} --timeout=180s
+
+      - name: Cleanup PROD kubeconfig
+        if: always()
+        run: |
+          KUBE_FILE="${{ runner.temp }}/.kube/kubeconfig.yaml"
+          shred -u "${KUBE_FILE}" || rm -f "${KUBE_FILE}"
