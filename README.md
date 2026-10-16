@@ -124,3 +124,28 @@ Dockerfile          single-container build (mirrors the wizard's pattern): build
                     and the built SPA on one port
 .github/workflows/ci-cd.yml   build → push to Harbor → patch the Deployment's image on the existing cluster
 ```
+## to run locally
+```
+# terminal 1 — backend
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+DEV_MODE=true uvicorn app.main:app --reload --port 4100
+
+on windows cmd:
+cd backend
+python -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+set DEV_MODE=true
+uvicorn app.main:app --reload --port 4100
+
+deactivate
+
+# terminal 2 — frontend
+cd frontend
+npm install
+npm run dev
+```
+
+Open http://localhost:5173, click Log in — you'll land straight in the dashboard. You can click through the "start new validation" form and the checklist tabs, but actually pulling a dataset from the KG will fail in dev mode since that genuinely needs your EBRAINS login — that part only becomes testable once the real OIDC client exists.

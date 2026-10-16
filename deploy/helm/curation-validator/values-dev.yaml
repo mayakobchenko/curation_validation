@@ -1,0 +1,12 @@
+image:
+  repository: docker-registry.ebrains.eu/ebrains-data-curation/curation-validator-dev/image-curation-validator-dev
+  tag: latest   # CI rewrites this line
+
+config:
+  # TODO: fill in once IT confirms the host name
+  oidcClientId: ""
+  oidcRedirectUri: "https://curation-validator-dev.apps.dev-jsccloud.ebrains.eu/auth/callback"
+  frontendOrigin: "https://curation-validator-dev.apps.dev-jsccloud.ebrains.eu"
+
+ingress:
+  host: curation-validator-dev.apps.dev-jsccloud.ebrains.eu

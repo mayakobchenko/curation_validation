@@ -1,0 +1,11 @@
+image:
+  repository: docker-registry.ebrains.eu/ebrains-data-curation/curation-validator
+  tag: latest   # CI rewrites this line
+
+config:
+  oidcClientId: ""
+  oidcRedirectUri: "https://<production-host>/auth/callback"
+  frontendOrigin: "https://<production-host>"
+
+ingress:
+  host: "<production-host>"

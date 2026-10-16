@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cv.fullname" . }}
+  labels:
+    {{- include "cv.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  # one volume that can only be mounted once -> stop the old pod before starting the new one
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "cv.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cv.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      containers:
+        - name: curation-validator
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+          env:
+            - name: HOME
+              value: /tmp            # LibreOffice (PDF export) needs a writable home
+            - name: IAM_BASE_URL
+              value: {{ .Values.config.iamBaseUrl | quote }}
+            - name: IAM_REALM
+              value: {{ .Values.config.iamRealm | quote }}
+            - name: KG_API_BASE
+              value: {{ .Values.config.kgApiBase | quote }}
+            - name: KG_STAGE
+              value: {{ .Values.config.kgStage | quote }}
+            - name: CURATION_VALIDATOR_OIDC_CLIENT_ID
+              value: {{ .Values.config.oidcClientId | quote }}
+            - name: OIDC_REDIRECT_URI
+              value: {{ .Values.config.oidcRedirectUri | quote }}
+            - name: FRONTEND_ORIGIN
+              value: {{ .Values.config.frontendOrigin | quote }}
+            - name: DATA_DIR
+              value: {{ .Values.config.dataDir | quote }}
+            - name: DEV_MODE
+              value: {{ .Values.config.devMode | quote }}
+            - name: CURATION_VALIDATOR_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: CURATION_VALIDATOR_OIDC_CLIENT_SECRET
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: SESSION_SECRET
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.config.dataDir }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "cv.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

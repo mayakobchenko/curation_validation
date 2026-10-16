@@ -1,0 +1,6 @@
+apiVersion: v2
+name: curation-validator
+description: EBRAINS Curation Validator (FastAPI backend + React frontend in one container)
+type: application
+version: 0.1.0
+appVersion: "latest"

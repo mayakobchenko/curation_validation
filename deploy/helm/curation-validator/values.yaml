@@ -1,0 +1,75 @@
+# Defaults. Per-environment overrides live in values-dev.yaml / values-prod.yaml
+# (the CI workflow only edits image.tag in those files). NO SECRETS in here: the chart is in a
+# public Git repo. Secrets come from Vault (see "secrets" below).
+
+image:
+  repository: docker-registry.ebrains.eu/ebrains-data-curation/curation-validator
+  tag: latest            # overwritten by CI with the git commit SHA
+  pullPolicy: IfNotPresent
+
+# only needed if the Harbor project is private; the Secret must already exist in the namespace
+imagePullSecrets: []
+
+replicaCount: 1          # validation runs are stored as JSON files on one volume -> keep 1
+
+service:
+  port: 80
+  targetPort: 4100
+
+# Non-secret configuration (becomes plain environment variables)
+config:
+  iamBaseUrl: https://iam.ebrains.eu/auth
+  iamRealm: hbp
+  kgApiBase: https://core.kg.ebrains.eu/v3
+  kgStage: IN_PROGRESS
+  oidcClientId: ""                  # the client ID is public information; the SECRET is not
+  oidcRedirectUri: ""               # https://<host>/auth/callback
+  frontendOrigin: ""                # https://<host>
+  dataDir: /usr/src/app/data
+  # never true in a deployed environment (skips login)
+  devMode: false
+
+# Secret values (client secret, session secret) are NEVER put in this chart.
+# The Deployment reads them from an existing Kubernetes Secret with these keys:
+#   CURATION_VALIDATOR_OIDC_CLIENT_SECRET, SESSION_SECRET
+# That Secret is created from Vault by the cluster's Vault integration. Pick ONE of:
+#   (a) existingSecret: the Secret is created outside this chart (e.g. by the Vault Secrets
+#       Operator or by the platform team) -> just give its name.
+#   (b) externalSecret.enabled: this chart creates an External Secrets Operator `ExternalSecret`
+#       that pulls the two keys from Vault (needs the ESO CRDs and a SecretStore in the namespace).
+secrets:
+  existingSecret: curation-validator-secrets
+
+externalSecret:
+  enabled: false
+  apiVersion: external-secrets.io/v1beta1
+  secretStoreRef:
+    kind: SecretStore
+    name: vault               # ask the platform team for the real name
+  refreshInterval: 1h
+  # Vault path (relative to the store's mount) that holds the two keys
+  remoteKey: curation-validator
+
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""            # empty = cluster default (Longhorn)
+  accessMode: ReadWriteOnce
+
+ingress:
+  enabled: true
+  className: ""               # empty = cluster default
+  host: ""                    # e.g. curation-validator-dev.apps.<cluster-domain>
+  annotations: {}
+  tls:
+    enabled: true
+    secretName: ""            # empty = let the cluster's default/wildcard certificate handle it
+
+resources:
+  requests: { cpu: 100m, memory: 256Mi }
+  limits:   { cpu: "1", memory: 1Gi }
+
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000

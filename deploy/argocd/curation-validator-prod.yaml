@@ -1,0 +1,26 @@
+# Argo CD Application for the PRODUCTION environment.
+# Apply it once (or let the IT team add it to the Argo CD project): after that Argo CD watches the
+# Git repo and deploys whatever is committed on the `production` branch under deploy/helm/curation-validator.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: curation-validator
+  namespace: argocd                      # TODO confirm: the namespace Argo CD itself runs in
+spec:
+  project: default                       # TODO confirm: the Argo CD project IT created for us
+  source:
+    repoURL: https://github.com/mayakobchenko/curation_validation.git   # TODO confirm owner/name
+    targetRevision: production
+    path: deploy/helm/curation-validator
+    helm:
+      valueFiles:
+        - values-prod.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: curation-validator    # TODO confirm: the namespace IT created for us
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
