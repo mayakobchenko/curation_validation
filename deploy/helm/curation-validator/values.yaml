@@ -31,7 +31,7 @@ config:
 
 # Secret values (client secret, session secret) are NEVER put in this chart.
 # The Deployment reads them from an existing Kubernetes Secret with these keys:
-#   CURATION_VALIDATOR_OIDC_CLIENT_SECRET, SESSION_SECRET
+#   CLIENT_SECRET, SESSION_SECRET   (names configurable in secrets.keys below)
 # That Secret is created from Vault by the cluster's Vault integration. Pick ONE of:
 #   (a) existingSecret: the Secret is created outside this chart (e.g. by the Vault Secrets
 #       Operator or by the platform team) -> just give its name.
@@ -39,6 +39,9 @@ config:
 #       that pulls the two keys from Vault (needs the ESO CRDs and a SecretStore in the namespace).
 secrets:
   existingSecret: curation-validator-secrets
+  keys:                       # key names inside that Secret (= key names in Vault)
+    clientSecret: CLIENT_SECRET
+    sessionSecret: SESSION_SECRET
 
 externalSecret:
   enabled: false

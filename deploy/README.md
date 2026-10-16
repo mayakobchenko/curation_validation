@@ -19,12 +19,12 @@ Vault ──► Kubernetes Secret `curation-validator-secrets` ──► read by
 1. **Git repository** for Argo CD (the "chart URL"): `https://github.com/mayakobchenko/curation_validation.git`, path `deploy/helm/curation-validator`. The chart is our own; it uses **no third-party chart repositories**.
 2. **Container registry**: `docker-registry.ebrains.eu` (images `ebrains-data-curation/curation-validator[-dev/...]`).
 3. **Namespaces** (`curation-validator-dev`, `curation-validator`) and the Argo CD project name.
-4. **Vault**: a path holding two keys, `CURATION_VALIDATOR_OIDC_CLIENT_SECRET` and `SESSION_SECRET`, and the mechanism that turns it into the Kubernetes Secret `curation-validator-secrets` (see `values.yaml`, section `secrets`).
+4. **Vault**: a path holding two keys, `CLIENT_SECRET` and `SESSION_SECRET` (names set in `secrets.keys`), and the mechanism that turns it into the Kubernetes Secret `curation-validator-secrets` (see `values.yaml`, section `secrets`).
 5. **Host name** (e.g. `curation-validator-dev.apps.dev-jsccloud.ebrains.eu`) and a Keycloak (IAM) client whose redirect URI is `https://<host>/auth/callback`.
 
 ## Secrets: generate once, store in Vault
 - `SESSION_SECRET`: a long random string, e.g. `python -c "import secrets; print(secrets.token_urlsafe(48))"`.
-- `CURATION_VALIDATOR_OIDC_CLIENT_SECRET`: from the IAM client.
+- `CLIENT_SECRET`: from the IAM client.
 Never commit either to this repository (it is public).
 
 ## Check a chart locally
