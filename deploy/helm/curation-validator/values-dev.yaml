@@ -1,6 +1,6 @@
 image:
   repository: docker-registry.ebrains.eu/ebrains-data-curation/curation-validator-dev/image-curation-validator-dev
-  tag: latest   # CI rewrites this line
+  tag: c48f7c1461b3ca74ca8908fe920052adeb8f452c
 
 config:
   # TODO: fill in once IT confirms the host name
