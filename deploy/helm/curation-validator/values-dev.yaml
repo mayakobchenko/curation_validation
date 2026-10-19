@@ -3,7 +3,6 @@ image:
   tag: c48f7c1461b3ca74ca8908fe920052adeb8f452c
 
 config:
-  # TODO: fill in once IT confirms the host name
   oidcClientId: ""
   oidcRedirectUri: "https://curation-validator-dev.apps.dev-jsccloud.ebrains.eu/auth/callback"
   frontendOrigin: "https://curation-validator-dev.apps.dev-jsccloud.ebrains.eu"
@@ -23,5 +22,5 @@ externalSecret:
   enabled: true
   secretStoreRef:
     kind: SecretStore
-    name: secretstore-curation-validation-dev-curation-validation-dev   # TODO confirm with Ops: secretstore-<GROUP>-<NS>
-  remoteKey: curation-validation-dev/curation-validator                  # Vault path <NS>/<secret name>
+    name: curation-validation-dev-curation-validation-dev   
+  remoteKey: curation-validation-dev/curation-validator                
