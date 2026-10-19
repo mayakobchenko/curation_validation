@@ -9,7 +9,13 @@ config:
   frontendOrigin: "https://curation-validator-dev.apps.dev-jsccloud.ebrains.eu"
 
 ingress:
+  className: traefik
   host: curation-validator-dev.apps.dev-jsccloud.ebrains.eu
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production-issuer-1"
+  tls:
+    enabled: true
+    secretName: curation-validator-dev-tls
 
 # Secrets come from Vault through External Secrets Operator (see deploy/README.md).
 # GROUP = curation-validation-dev (Vault mount kv-curation-validation-dev), NS = curation-validation-dev.
