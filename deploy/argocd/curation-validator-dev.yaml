@@ -17,7 +17,7 @@ spec:
         - values-dev.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: curation-validator-dev    # TODO confirm: the namespace IT created for us
+    namespace: curation-validation-dev    # confirmed by IT
   syncPolicy:
     automated:
       prune: true

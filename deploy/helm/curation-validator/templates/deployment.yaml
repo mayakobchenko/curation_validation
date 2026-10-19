@@ -44,7 +44,10 @@ spec:
             - name: KG_STAGE
               value: {{ .Values.config.kgStage | quote }}
             - name: CURATION_VALIDATOR_OIDC_CLIENT_ID
-              value: {{ .Values.config.oidcClientId | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: {{ .Values.secrets.keys.clientId }}
             - name: OIDC_REDIRECT_URI
               value: {{ .Values.config.oidcRedirectUri | quote }}
             - name: FRONTEND_ORIGIN

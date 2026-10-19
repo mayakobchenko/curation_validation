@@ -10,3 +10,12 @@ config:
 
 ingress:
   host: curation-validator-dev.apps.dev-jsccloud.ebrains.eu
+
+# Secrets come from Vault through External Secrets Operator (see deploy/README.md).
+# GROUP = curation-validation-dev (Vault mount kv-curation-validation-dev), NS = curation-validation-dev.
+externalSecret:
+  enabled: true
+  secretStoreRef:
+    kind: SecretStore
+    name: secretstore-curation-validation-dev-curation-validation-dev   # TODO confirm with Ops: secretstore-<GROUP>-<NS>
+  remoteKey: curation-validation-dev/curation-validator                  # Vault path <NS>/<secret name>

@@ -22,7 +22,6 @@ config:
   iamRealm: hbp
   kgApiBase: https://core.kg.ebrains.eu/v3
   kgStage: IN_PROGRESS
-  oidcClientId: ""                  # the client ID is public information; the SECRET is not
   oidcRedirectUri: ""               # https://<host>/auth/callback
   frontendOrigin: ""                # https://<host>
   dataDir: /usr/src/app/data
@@ -31,7 +30,7 @@ config:
 
 # Secret values (client secret, session secret) are NEVER put in this chart.
 # The Deployment reads them from an existing Kubernetes Secret with these keys:
-#   CLIENT_SECRET, SESSION_SECRET   (names configurable in secrets.keys below)
+#   OIDC_CLIENT_ID, CLIENT_SECRET, SESSION_SECRET   (names configurable in secrets.keys below)
 # That Secret is created from Vault by the cluster's Vault integration. Pick ONE of:
 #   (a) existingSecret: the Secret is created outside this chart (e.g. by the Vault Secrets
 #       Operator or by the platform team) -> just give its name.
@@ -40,18 +39,19 @@ config:
 secrets:
   existingSecret: curation-validator-secrets
   keys:                       # key names inside that Secret (= key names in Vault)
+    clientId: OIDC_CLIENT_ID
     clientSecret: CLIENT_SECRET
     sessionSecret: SESSION_SECRET
 
 externalSecret:
   enabled: false
-  apiVersion: external-secrets.io/v1beta1
+  apiVersion: external-secrets.io/v1
   secretStoreRef:
     kind: SecretStore
-    name: vault               # ask the platform team for the real name
-  refreshInterval: 1h
-  # Vault path (relative to the store's mount) that holds the two keys
-  remoteKey: curation-validator
+    name: ""                  # EBRAINS convention: secretstore-<GROUP>-<NS>, created by the Ops team
+  refreshInterval: 1m
+  # Vault path inside the group's KV mount (kv-<GROUP>), by EBRAINS convention <NS>/<secret-name>
+  remoteKey: ""
 
 persistence:
   enabled: true
