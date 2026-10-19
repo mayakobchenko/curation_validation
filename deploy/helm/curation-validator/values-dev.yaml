@@ -6,8 +6,6 @@ config:
   oidcClientId: ""
   oidcRedirectUri: "https://curation-validator-dev.apps.dev-jsccloud.ebrains.eu/auth/callback"
   frontendOrigin: "https://curation-validator-dev.apps.dev-jsccloud.ebrains.eu"
-  iamBaseUrl: https://iam-int.ebrains.eu/auth
-  iamRealm: hbp
 
 ingress:
   className: traefik
