@@ -43,6 +43,29 @@ spec:
               value: {{ .Values.config.kgApiBase | quote }}
             - name: KG_STAGE
               value: {{ .Values.config.kgStage | quote }}
+            - name: OIDC_SCOPE
+              value: {{ .Values.config.oidcScope | quote }}
+            - name: DRIVE_BASE
+              value: {{ .Values.config.driveBase | quote }}
+            - name: DATA_PROXY_BASE
+              value: {{ .Values.config.dataProxyBase | quote }}
+            {{- if .Values.llm.enabled }}
+            - name: LLM_BASE_URL
+              value: {{ .Values.llm.baseUrl | quote }}
+            - name: LLM_MODEL
+              value: {{ .Values.llm.model | quote }}
+            - name: LLM_LABEL
+              value: {{ .Values.llm.label | quote }}
+            - name: LLM_MAX_TOKENS_PARAM
+              value: {{ .Values.llm.maxTokensParam | quote }}
+            - name: LLM_MAX_TOKENS
+              value: {{ .Values.llm.maxTokens | quote }}
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.existingSecret }}
+                  key: {{ .Values.secrets.keys.llmApiKey }}
+            {{- end }}
             - name: CURATION_VALIDATOR_OIDC_CLIENT_ID
               valueFrom:
                 secretKeyRef:

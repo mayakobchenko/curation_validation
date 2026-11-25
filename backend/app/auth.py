@@ -65,7 +65,7 @@ async def login():
         "client_id": settings.OIDC_CLIENT_ID,
         "redirect_uri": settings.OIDC_REDIRECT_URI,
         "response_type": "code",
-        "scope": "openid profile email team roles group",
+        "scope": settings.OIDC_SCOPE,
     }
     return RedirectResponse(f"{settings.iam_auth_endpoint}?{urlencode(params)}")
 

@@ -15,12 +15,12 @@ differs.
 |---|---|
 | 1. Dataset info | form fields, carried through to the export |
 | 2. Secondary curator info | form field |
-| 3. Data Descriptor checks | **manual** — judging prose quality/content match is out of scope for v1 |
+| 3. Data Descriptor checks | file present, no template text (automatic); content match and proofreading from the **AI review** (suggestion) |
 | 4. Structure & file storage | **manual** |
 | 5a. Dataset / DSV fields | **automated**: required-field presence pulled live from the KG, DOI resolution, and a DS-vs-DSV duplication check (per the form's inheritance rule — identical values on both DS and DSV are flagged since they should live on the DS card only) |
 | 5b/5c. Subject / tissue sample fields | **automated**: required-field presence pulled live from the KG |
 | 5d. Project | manual (presence of a linked Project isn't yet pulled) |
-| 6. File repository | **manual** — needs the collab bucket, not yet wired up |
+| 6. File repository | bucket exists, data descriptor PDF and licence file present (automatic); the rest manual |
 
 Automated results show as a suggestion (✅/❌/–) next to each item; the
 secondary curator's own Yes/No/N/A answer is always what gets saved and
@@ -30,6 +30,38 @@ The "open 5 tabs" step (data descriptor, metadata overview, dataset
 preview, DSV in KG Editor, collab bucket) is replaced by **Start new
 validation**: paste the DatasetVersion UUID and the app pulls the DS, DSV,
 subjects/groups and tissue samples/collections from the KG in one call.
+
+## What is fetched for you
+
+A validation needs only the **dataset version UUID** and the **GitLab issue URL**. With the curator's own EBRAINS token
+the app then fetches:
+
+- **Knowledge Graph** (`kg_client.py`): the dataset version, its parent dataset, and everything in the collab space
+  `collab-d-<uuid>`: subjects, subject groups, tissue samples, tissue sample collections with all their states, and what
+  they point to (persons, ORCIDs, species, strains, licence, techniques ...). The title, version and persons fill in
+  by themselves.
+- **Collab drive** (`drive_client.py`, scope `collab.drive`): `data-descriptor_<id>.doc(x)` (read to text in
+  `descriptor.py`; an old `.doc` needs LibreOffice, which the image has) and the wizard's `metadata_wizard_draft.json`.
+- **Data Proxy bucket** `d-<uuid>` (`bucket_client.py`): file names, sizes and the `sub-xxx` identifiers in them.
+  Names only, no file contents.
+
+`compare.py` compares the metadata draft with the KG (title, description, persons, ORCIDs, subjects and their states,
+groups, tissue samples, collections) and the bucket's subject identifiers with the KG subjects. `checks.py` turns all of it
+into the suggestions next to the checklist items (with the fetched value or the reason in the note).
+
+A source that cannot be fetched (no drive access, no bucket) is reported on the *Sources* tab and does not stop the
+validation.
+
+### AI review
+
+The *AI review* tab sends the text of the data descriptor, the KG metadata, the differences found by the comparison and the
+bucket's file names to a language model (any service that speaks the OpenAI chat-completions protocol, such as GPT UiO)
+and shows its findings. It only suggests: the curator's own answers are never changed. Configure it with `LLM_BASE_URL`,
+`LLM_API_KEY` (a secret, kept on the server), `LLM_MODEL`, `LLM_LABEL`, `LLM_MAX_TOKENS_PARAM` (see `.env.example`; in the
+Helm chart `llm.*` and the Vault key `LLM_API_KEY`). The descriptor and the metadata can contain personal data: use a
+service that the data may be sent to.
+
+Tests: `cd backend && pip install -r requirements.txt -r requirements-dev.txt && python -m pytest`.
 
 ## Stack
 

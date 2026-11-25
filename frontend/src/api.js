@@ -25,7 +25,9 @@ export const api = {
   startRun: (payload) => request('/api/validations', { method: 'POST', body: JSON.stringify(payload) }),
   getRun: (id) => request(`/api/validations/${id}`),
   updateRun: (id, payload) => request(`/api/validations/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
-  refreshChecks: (id) => request(`/api/validations/${id}/refresh-checks`, { method: 'POST' }),
+  refreshSources: (id) => request(`/api/validations/${id}/refresh-sources`, { method: 'POST' }),
+  llmReview: (id) => request(`/api/validations/${id}/llm-review`, { method: 'POST' }),
+  llmInfo: () => request('/api/llm'),
   submitRun: (id) => request(`/api/validations/${id}/submit`, { method: 'POST' }),
 
   exportDocxUrl: (id) => `/api/validations/${id}/export.docx`,

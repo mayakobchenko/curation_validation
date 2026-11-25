@@ -27,6 +27,9 @@ class DatasetInfo(BaseModel):
     dataset_title: str = ""
     gitlab_issue_url: str = ""
     dataset_version_uuid: str = ""
+    # filled from the KG when the run starts
+    dataset_uuid: str = ""
+    version_identifier: str = ""
 
 
 class SecondaryCuratorInfo(BaseModel):
@@ -78,11 +81,20 @@ class ValidationRun(BaseModel):
     # re-fetch the KG to show what it last saw
     kg_snapshot: Optional[dict] = None
 
+    # what was fetched besides the KG, and what was made of it (see routes/validation.py)
+    sources: dict = Field(default_factory=dict)        # per source: {"ok": bool, "error": str|None, "fetched_at": iso, ...}
+    descriptor: Optional[dict] = None                  # {"name", "text"} of the data descriptor from the Collab drive
+    draft: Optional[dict] = None                       # the metadata draft of the Collab drive (wizard form data)
+    bucket: Optional[dict] = None                      # {"bucket", "summary", "error"} names-only listing
+    comparison: Optional[dict] = None                  # draft against the KG, bucket identifiers against the KG
+    llm_review: Optional[dict] = None                  # suggestions of the language model
+
 
 DEFAULT_TABLE3_ITEMS = [
     "Data Descriptor present and uploaded",
     "Data Descriptor matches the dataset content",
     "Data Descriptor free of placeholder/template text",
+    "Data Descriptor is proofread (no flaws or typos)",
 ]
 
 DEFAULT_TABLE4_ITEMS = [

@@ -25,6 +25,11 @@ config:
   oidcRedirectUri: ""               # https://<host>/auth/callback
   frontendOrigin: ""                # https://<host>
   dataDir: /usr/src/app/data
+  # scope of the login; add collab.drive (the OIDC client must be allowed it) to read the data descriptor and the
+  # metadata draft from the dataset's Collab drive
+  oidcScope: "openid profile email team roles group"
+  driveBase: https://drive.ebrains.eu
+  dataProxyBase: https://data-proxy.ebrains.eu/api/v1
   # never true in a deployed environment (skips login)
   devMode: false
 
@@ -42,6 +47,17 @@ secrets:
     clientId: OIDC_CLIENT_ID
     clientSecret: CLIENT_SECRET
     sessionSecret: SESSION_SECRET
+    llmApiKey: LLM_API_KEY
+
+# Language model for the AI review of the data descriptor (any OpenAI chat-completions service, e.g. GPT UiO).
+# The API key is a secret: Vault key LLM_API_KEY, read like the other secrets when llm.enabled is true.
+llm:
+  enabled: false
+  baseUrl: ""
+  model: ""
+  label: "Language model"
+  maxTokensParam: max_tokens        # or max_completion_tokens (Azure GPT-5 style models)
+  maxTokens: 4000
 
 externalSecret:
   enabled: false

@@ -19,6 +19,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(validation.router)
+app.include_router(validation.info_router)
 app.include_router(export_routes.router)
 
 

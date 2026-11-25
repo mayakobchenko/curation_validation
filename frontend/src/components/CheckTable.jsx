@@ -1,4 +1,4 @@
-import { Table, Radio, Input, Tag, Tooltip } from 'antd'
+import { Table, Radio, Input, Tag, Typography } from 'antd'
 import { CheckCircleTwoTone, CloseCircleTwoTone, MinusCircleTwoTone } from '@ant-design/icons'
 
 const autoIcon = (result) => {
@@ -15,14 +15,17 @@ export default function CheckTable({ items, onChange }) {
   }
 
   const columns = [
-    { title: 'Item', dataIndex: 'label', key: 'label', width: '30%' },
+    { title: 'Item', dataIndex: 'label', key: 'label', width: '18%' },
     {
-      title: 'Auto-check',
+      title: 'Auto-check (suggestion)',
       key: 'auto',
-      width: 90,
+      width: '34%',
       render: (_, row) =>
         row.auto_result ? (
-          <Tooltip title={row.auto_note || row.auto_result}>{autoIcon(row.auto_result)}</Tooltip>
+          <span>
+            {autoIcon(row.auto_result)}{' '}
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>{row.auto_note}</Typography.Text>
+          </span>
         ) : (
           <Tag>manual</Tag>
         ),

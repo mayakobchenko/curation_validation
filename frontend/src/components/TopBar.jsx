@@ -15,7 +15,8 @@ export default function TopBar() {
 
   return (
     <Header style={{ background: '#fff', borderBottom: '1px solid #e8e8e8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Link to="/" style={{ fontWeight: 600, fontSize: 18, color: '#222' }}>
+      <Link to="/" style={{ fontWeight: 600, fontSize: 18, color: '#222', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <img src="/ebrains-logo.png" alt="EBRAINS" style={{ height: 32 }} />
         EBRAINS Curation Validator
       </Link>
       <Space>

@@ -48,4 +48,5 @@ def list_all() -> list[ValidationRun]:
                 runs.append(load(run_id))
             except Exception:
                 continue
+    runs.sort(key=lambda r: r.created_at or "", reverse=True)   # newest first
     return runs
